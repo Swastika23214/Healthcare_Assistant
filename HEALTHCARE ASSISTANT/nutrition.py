@@ -5,9 +5,9 @@ from tkinter import messagebox
 from database import connect
 import datetime
 
-# ----------------------------
-# Load and merge CSVs robustly without inflating totals
-# ----------------------------
+
+# Load and merge CSVs 
+
 folder_path = "nutrition_data/datasets/"
 nutrition_data = {}
 
@@ -74,9 +74,9 @@ daily_csv = "nutrition_data/daily_food_nutrition_dataset.csv"
 if os.path.exists(daily_csv):
     load_csv(daily_csv)
 
-# ----------------------------
+
 # Recommended daily intake
-# ----------------------------
+
 recommended = {
     "calories": 2000,
     "protein": 50,
@@ -85,9 +85,9 @@ recommended = {
     "vitamins": 1.5  # grams
 }
 
-# ----------------------------
+
 # Nutrition GUI
-# ----------------------------
+
 def nutrition_gui(user_id):
     conn, cur = connect()
     cur.execute("""
@@ -144,7 +144,7 @@ def nutrition_gui(user_id):
         )
 
         if missing:
-            msg += "\n\n⚠️ Not found in database: " + ", ".join(missing)
+            msg += "\n\n Not found in database: " + ", ".join(missing)
 
         # Save to database
         conn, cur = connect()
@@ -172,3 +172,4 @@ def nutrition_gui(user_id):
     food_entry = ctk.CTkEntry(win, width=350, font=("Arial", 13))
     food_entry.pack(pady=5)
     ctk.CTkButton(win, text="Calculate & Save", command=calculate).pack(pady=10)
+
