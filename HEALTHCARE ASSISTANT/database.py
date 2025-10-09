@@ -4,9 +4,9 @@ def connect():
     conn = sqlite3.connect("health_tracker.db")
     cur = conn.cursor()
 
-    # ----------------------------
+    
     # Users table
-    # ----------------------------
+    
     cur.execute("""
         CREATE TABLE IF NOT EXISTS users(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,9 +18,9 @@ def connect():
         )
     """)
 
-    # ----------------------------
+    
     # Daily vitals table
-    # ----------------------------
+    
     cur.execute("""
         CREATE TABLE IF NOT EXISTS vitals(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,9 +36,9 @@ def connect():
         )
     """)
 
-    # ----------------------------
+   
     # Medicine table
-    # ----------------------------
+   
     cur.execute("""
         CREATE TABLE IF NOT EXISTS medicine(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,3 +56,4 @@ def connect():
 
     conn.commit()
     return conn, cur
+
