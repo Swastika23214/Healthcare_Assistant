@@ -11,15 +11,13 @@ import sqlite3
 from plyer import notification
 from datetime import datetime
 
-# ----------------------------
-# Global user session
-# ----------------------------
+
 user_id = None
 user_name = ""
 
-# ----------------------------
+
 # Background Reminder Thread
-# ----------------------------
+
 def reminder_loop():
     """Checks every 60s for medicines to remind."""
     while True:
@@ -33,7 +31,7 @@ def reminder_loop():
 
             for med in meds:
                 notification.notify(
-                    title="💊 Medicine Reminder",
+                    title="Medicine Reminder",
                     message=f"Time to take {med[0]}",
                     timeout=10
                 )
@@ -41,9 +39,9 @@ def reminder_loop():
             print("Reminder error:", e)
         time.sleep(60)
 
-# ----------------------------
+
 # Dashboard after login
-# ----------------------------
+
 def show_dashboard():
     global user_id, user_name
 
@@ -71,9 +69,9 @@ def show_dashboard():
     ctk.CTkButton(dash, text="Logout", fg_color="red", command=logout).pack(pady=20)
     dash.mainloop()
 
-# ----------------------------
+
 # Homepage (Login/Register)
-# ----------------------------
+
 def show_homepage():
     home = ctk.CTk()
     home.geometry("400x500")
@@ -126,10 +124,11 @@ def show_homepage():
     ctk.CTkButton(home, text="Login", command=login_action).pack(pady=10)
     home.mainloop()
 
-# ----------------------------
+
 # Main Entry
-# ----------------------------
+
 if __name__ == "__main__":
     threading.Thread(target=reminder_loop, daemon=True).start()
     show_homepage()
+
 
