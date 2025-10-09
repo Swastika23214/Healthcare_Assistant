@@ -3,24 +3,24 @@ from tkinter import messagebox
 import sqlite3
 from datetime import datetime
 
-# -------------------------------
+
 # Database helper
-# -------------------------------
+
 def connect():
     conn = sqlite3.connect("health_tracker.db")
     cur = conn.cursor()
     return conn, cur
 
 
-# -------------------------------
+
 # VITALS GUI
-# -------------------------------
+
 def vitals_gui(user_id, user_name):
     window = ctk.CTkToplevel()
     window.title("Daily Vitals Tracker")
     window.geometry("420x600")
 
-    ctk.CTkLabel(window, text=f"Hello {user_name} 👋", font=("Arial", 18, "bold")).pack(pady=10)
+    ctk.CTkLabel(window, text=f"Hello {user_name} ", font=("Arial", 18, "bold")).pack(pady=10)
     ctk.CTkLabel(window, text="Enter your vitals below:", font=("Arial", 14)).pack(pady=5)
 
     # --- Input fields ---
@@ -33,9 +33,9 @@ def vitals_gui(user_id, user_name):
     for entry in [bp_sys, bp_dia, sugar, weight, pulse]:
         entry.pack(pady=6, padx=20, fill="x")
 
-    # -----------------------
+  
     # Save and analyze vitals
-    # -----------------------
+    
     def save_vitals():
         try:
             systolic = int(bp_sys.get())
@@ -57,48 +57,48 @@ def vitals_gui(user_id, user_name):
 
             # --- Blood Pressure ---
             if systolic > 130 or diastolic > 85:
-                feedback.append("⚠️ Your blood pressure is higher than normal.")
+                feedback.append(" Your blood pressure is higher than normal.")
             elif systolic < 90 or diastolic < 60:
-                feedback.append("⚠️ Your blood pressure is lower than normal.")
+                feedback.append(" Your blood pressure is lower than normal.")
             else:
                 feedback.append("✅ Your blood pressure is normal.")
 
             # --- Sugar ---
             if sugar_val > 140:
-                feedback.append("⚠️ High blood sugar detected. Limit sugary foods.")
+                feedback.append(" High blood sugar detected. Limit sugary foods.")
             elif sugar_val < 70:
-                feedback.append("⚠️ Low sugar detected. Eat something sweet.")
+                feedback.append(" Low sugar detected. Eat something sweet.")
             else:
                 feedback.append("✅ Blood sugar level is normal.")
 
             # --- Pulse ---
             if pulse_val > 100:
-                feedback.append("⚠️ High pulse rate. Rest and hydrate.")
+                feedback.append(" High pulse rate. Rest and hydrate.")
             elif pulse_val < 60:
-                feedback.append("⚠️ Low pulse rate. Consult doctor if dizzy.")
+                feedback.append(" Low pulse rate. Consult doctor if dizzy.")
             else:
                 feedback.append("✅ Pulse rate is normal.")
 
             # --- Weight ---
-            feedback.append(f"💡 Your weight: {weight_val} kg. Monitor weekly for changes.")
+            feedback.append(f" Your weight: {weight_val} kg. Monitor weekly for changes.")
 
             # --- Summary ---
             good = sum(1 for f in feedback if "✅" in f)
             if good == 4:
-                feedback.append("\n🌟 Excellent! All your vitals look good.")
+                feedback.append("\n Excellent! All your vitals look good.")
             elif good >= 2:
-                feedback.append("\n🙂 You’re mostly fine, just watch out for warnings above.")
+                feedback.append("\n You’re mostly fine, just watch out for warnings above.")
             else:
-                feedback.append("\n⚠️ Multiple vitals are out of range. Please monitor regularly.")
+                feedback.append("\n Multiple vitals are out of range. Please monitor regularly.")
 
             show_feedback("Vitals Summary", feedback)
 
         except ValueError:
             messagebox.showerror("Input Error", "Please enter valid numeric values in all fields.")
 
-    # -----------------------
+    
     # Show feedback window
-    # -----------------------
+    
     def show_feedback(title, messages):
         fb = ctk.CTkToplevel(window)
         fb.title(title)
@@ -112,9 +112,9 @@ def vitals_gui(user_id, user_name):
     ctk.CTkButton(window, text="Close", command=window.destroy).pack(pady=10)
 
 
-# -------------------------------
+
 # SLEEP GUI
-# -------------------------------
+
 def sleep_gui(user_id, user_name):
     sleep_win = ctk.CTkToplevel()
     sleep_win.title("Sleep Tracker")
@@ -143,9 +143,9 @@ def sleep_gui(user_id, user_name):
 
             feedback = []
             if sleep_hours < 7:
-                feedback.append("😴 You should try to sleep at least 7 hours.")
+                feedback.append(" You should try to sleep at least 7 hours.")
             elif sleep_hours > 9:
-                feedback.append("💤 You might be oversleeping. 7–8 hours is ideal.")
+                feedback.append(" You might be oversleeping. 7–8 hours is ideal.")
             else:
                 feedback.append("✅ You’re getting good quality sleep.")
 
@@ -164,4 +164,5 @@ def sleep_gui(user_id, user_name):
 
     ctk.CTkButton(sleep_win, text="Save & Analyze", command=save_sleep).pack(pady=15)
     ctk.CTkButton(sleep_win, text="Close", command=sleep_win.destroy).pack(pady=5)
+
 
