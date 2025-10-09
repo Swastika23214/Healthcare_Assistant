@@ -14,8 +14,9 @@ meds = cur.fetchall()
 for med in meds:
     notification.notify(
         title="Medicine Reminder",
-        message=f"Time to take {med[0]} 💊",
+        message=f"Time to take {med[0]}",
         timeout=10
     )
 
 conn.close()
+
