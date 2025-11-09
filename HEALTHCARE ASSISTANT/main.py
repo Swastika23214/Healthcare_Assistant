@@ -3,7 +3,9 @@ import customtkinter as ctk
 from auth import login_gui, register_gui
 from user_input import vitals_gui, sleep_gui
 from medicine import medicine_gui
-from nutrition import nutrition_gui
+from nutrition_tracker import nutrition_gui
+from symptom_checker import symptom_checker_gui
+from report_generation import report_generation_gui  # NEW IMPORT
 from tkinter import messagebox
 import threading
 import time
@@ -15,91 +17,158 @@ from datetime import datetime
 user_id = None
 user_name = ""
 
-
-# Background Reminder Thread
-
-def reminder_loop():
-    """Checks every 60s for medicines to remind."""
-    while True:
-        try:
-            conn = sqlite3.connect("health_tracker.db")
-            cur = conn.cursor()
-            now = datetime.now().strftime("%H:%M")
-            cur.execute("SELECT name FROM medicine WHERE time=? AND paused=0", (now,))
-            meds = cur.fetchall()
-            conn.close()
-
-            for med in meds:
-                notification.notify(
-                    title="Medicine Reminder",
-                    message=f"Time to take {med[0]}",
-                    timeout=10
-                )
-        except Exception as e:
-            print("Reminder error:", e)
-        time.sleep(60)
-
-
 # Dashboard after login
 
 def show_dashboard():
     global user_id, user_name
 
     dash = ctk.CTk()
-    dash.geometry("500x550")
+    dash.geometry("550x720")  # Increased height for new button
     dash.title("Healthcare Assistant - Dashboard")
 
-    ctk.CTkLabel(dash, text=f"Welcome {user_name}!", font=("Arial", 18, "bold")).pack(pady=10)
+    # Header with improved styling
+    header_frame = ctk.CTkFrame(dash, fg_color="transparent")
+    header_frame.pack(pady=15)
+    
+    ctk.CTkLabel(
+        header_frame, 
+        text=f"Welcome back, {user_name}!", 
+        font=("Arial", 22, "bold")
+    ).pack()
+    
+    ctk.CTkLabel(
+        header_frame, 
+        text="Your Personal Healthcare Dashboard", 
+        font=("Arial", 12),
+        text_color="gray"
+    ).pack()
 
-    # Main buttons
-    ctk.CTkButton(dash, text="Enter Daily Vitals", command=lambda: vitals_gui(user_id,user_name)).pack(pady=5)
-    ctk.CTkButton(dash, text="Enter Sleep Hours", command=lambda: sleep_gui(user_id,user_name)).pack(pady=5)
-    ctk.CTkButton(dash, text="Track Nutrition", command=lambda: nutrition_gui(user_id)).pack(pady=5)
-    ctk.CTkButton(dash, text="Medicine Scheduler", command=lambda: medicine_gui()).pack(pady=5)
+ # Main buttons frame
+    button_frame = ctk.CTkFrame(dash, fg_color="transparent")
+    button_frame.pack(pady=10, padx=20, fill="both", expand=True)
 
-    # Logout
+    # Button styling helper
+    button_config = {
+        "width": 400,
+        "height": 45,
+        "font": ("Arial", 14),
+        "corner_radius": 10
+    }
+
+    # Main feature buttons
+    #Vitals Buttons
+    ctk.CTkButton(
+        button_frame, 
+        text=" Enter Daily Vitals", 
+        command=lambda: vitals_gui(user_id, user_name),
+        **button_config
+    ).pack(pady=8)
+    
+    ctk.CTkButton(
+        button_frame, 
+        text=" Enter Sleep Hours", 
+        command=lambda: sleep_gui(user_id, user_name),
+        **button_config
+    ).pack(pady=8)
+    
+    #Nutrition tracker button
+    ctk.CTkButton(
+        button_frame, 
+        text=" Track Nutrition", 
+        command=lambda: nutrition_gui(user_id),
+        **button_config
+    ).pack(pady=8)
+    
+    # Medicine Scheduler Button
+    ctk.CTkButton(
+        button_frame, 
+        text=" Medicine Scheduler", 
+        command=lambda: medicine_gui(),
+        **button_config
+    ).pack(pady=8)
+    
+    # Symptom Checker Button
+    ctk.CTkButton(
+        button_frame, 
+        text=" Symptom Checker", 
+        command=lambda: symptom_checker_gui(user_id),
+        **button_config
+    ).pack(pady=8)
+    
+    # NEW REPORT GENERATION BUTTON
+    ctk.CTkButton(
+        button_frame, 
+        text=" Generate Health Report", 
+        command=lambda: report_generation_gui(user_id, user_name),
+        **button_config
+    ).pack(pady=8)
+
+        # Logout button
     def logout():
         global user_id, user_name
         user_id = None
         user_name = ""
-        messagebox.showinfo("Logout", "You have been logged out.")
+        messagebox.showinfo("Logout", "You have been logged out successfully.")
         dash.destroy()
         show_homepage()
 
-    ctk.CTkButton(dash, text="Logout", fg_color="red", command=logout).pack(pady=20)
+    ctk.CTkButton(
+        button_frame, 
+        text=" Logout", 
+        fg_color="#FF0000",  
+        hover_color="#FF6666",
+        command=logout,
+        width=200,
+        height=40
+    ).pack(pady=20)
+    
     dash.mainloop()
 
-
-# Homepage (Login/Register)
+    # Homepage (Login/Register)
 
 def show_homepage():
     home = ctk.CTk()
-    home.geometry("400x500")
+    home.geometry("450x650")
     home.title("Healthcare Assistant - Login/Register")
 
-    ctk.CTkLabel(home, text="Register / Login", font=("Arial", 16, "bold")).pack(pady=10)
+    # Header
+    ctk.CTkLabel(
+        home, 
+        text=" Healthcare Assistant", 
+        font=("Arial", 24, "bold")
+    ).pack(pady=15)
+    
+    ctk.CTkLabel(
+        home, 
+        text="Register / Login to Continue", 
+        font=("Arial", 14)
+    ).pack(pady=5)
 
-    ctk.CTkLabel(home, text="Name").pack()
-    name_entry = ctk.CTkEntry(home)
-    name_entry.pack()
+    # Input frame
+    input_frame = ctk.CTkFrame(home, fg_color="transparent")
+    input_frame.pack(pady=10, padx=30)
 
-    ctk.CTkLabel(home, text="Age").pack()
-    age_entry = ctk.CTkEntry(home)
-    age_entry.pack()
+    ctk.CTkLabel(input_frame, text="Name", font=("Arial", 12)).pack(pady=3, anchor="w")
+    name_entry = ctk.CTkEntry(input_frame, width=350, height=35)
+    name_entry.pack(pady=5)
 
-    ctk.CTkLabel(home, text="Sex (M/F)").pack()
-    sex_entry = ctk.CTkEntry(home)
-    sex_entry.pack()
+    ctk.CTkLabel(input_frame, text="Age", font=("Arial", 12)).pack(pady=3, anchor="w")
+    age_entry = ctk.CTkEntry(input_frame, width=350, height=35)
+    age_entry.pack(pady=5)
 
-    ctk.CTkLabel(home, text="Username").pack()
-    username_entry = ctk.CTkEntry(home)
-    username_entry.pack()
+    ctk.CTkLabel(input_frame, text="Sex (M/F)", font=("Arial", 12)).pack(pady=3, anchor="w")
+    sex_entry = ctk.CTkEntry(input_frame, width=350, height=35)
+    sex_entry.pack(pady=5)
 
-    ctk.CTkLabel(home, text="Password").pack()
-    password_entry = ctk.CTkEntry(home, show="*")
-    password_entry.pack()
+    ctk.CTkLabel(input_frame, text="Username", font=("Arial", 12)).pack(pady=3, anchor="w")
+    username_entry = ctk.CTkEntry(input_frame, width=350, height=35)
+    username_entry.pack(pady=5)
 
-    # Register action
+    ctk.CTkLabel(input_frame, text="Password", font=("Arial", 12)).pack(pady=3, anchor="w")
+    password_entry = ctk.CTkEntry(input_frame, width=350, height=35, show="*")
+    password_entry.pack(pady=5)
+
+# Register action
     def register_action():
         try:
             register_gui(
@@ -112,7 +181,7 @@ def show_homepage():
         except ValueError:
             messagebox.showerror("Error", "Please enter a valid age.")
 
-    # Login action
+# Login action
     def login_action():
         global user_id, user_name
         user_id, user_name = login_gui(username_entry.get(), password_entry.get())
@@ -120,15 +189,33 @@ def show_homepage():
             home.destroy()
             show_dashboard()
 
-    ctk.CTkButton(home, text="Register", command=register_action).pack(pady=10)
-    ctk.CTkButton(home, text="Login", command=login_action).pack(pady=10)
+ # Buttons
+    button_frame = ctk.CTkFrame(home, fg_color="transparent")
+    button_frame.pack(pady=15)
+    ctk.CTkButton(
+        button_frame, 
+        text="Register", 
+        command=register_action,
+        width=150,
+        height=40,
+        font=("Arial", 13, "bold")
+    ).pack(pady=8)
+    
+    ctk.CTkButton(
+        button_frame, 
+        text="Login", 
+        command=login_action,
+        width=150,
+        height=40,
+        font=("Arial", 13, "bold"),
+        fg_color="#27AE60",
+        hover_color="#229954"
+    ).pack(pady=8)
+    
     home.mainloop()
 
 
 # Main Entry
 
 if __name__ == "__main__":
-    threading.Thread(target=reminder_loop, daemon=True).start()
     show_homepage()
-
-
