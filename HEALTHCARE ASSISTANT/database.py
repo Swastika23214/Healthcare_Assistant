@@ -37,23 +37,18 @@ def connect():
     """)
 
    
-    # Medicine table
-   
+# Medicine table with notes
     cur.execute("""
         CREATE TABLE IF NOT EXISTS medicine(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             name TEXT,
-            type TEXT,
-            dosage TEXT,
-            schedule_type TEXT,
             days TEXT,
             time TEXT,
-            paused INTEGER DEFAULT 0,
+            notes TEXT,
             FOREIGN KEY(user_id) REFERENCES users(id)
         )
     """)
-
     
     # Symptom table
     
