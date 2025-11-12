@@ -10,8 +10,6 @@ from fpdf import FPDF
 import os
 
 
-# Standard/Recommended Vitals Ranges
-
 STANDARD_VITALS = {
     "bp_systolic": {"min": 90, "max": 120, "unit": "mmHg", "name": "Blood Pressure (Systolic)"},
     "bp_diastolic": {"min": 60, "max": 80, "unit": "mmHg", "name": "Blood Pressure (Diastolic)"},
@@ -261,7 +259,10 @@ def report_generation_gui(user_id, user_name):
     def show_report_window(period, analysis):
         report_win = ctk.CTkToplevel()
         report_win.title(f"{period.capitalize()} Vitals Report")
-        report_win.geometry("1200x800")
+        screen_width = report_win.winfo_screenwidth()
+        screen_height = report_win.winfo_screenheight()
+        report_win.geometry(f"{screen_width}x{screen_height}")
+
         
         # Create notebook/tabs
         tab_view = ctk.CTkTabview(report_win, width=1150, height=720)
@@ -478,7 +479,10 @@ def report_generation_gui(user_id, user_name):
     # Main window
     win = ctk.CTkToplevel()
     win.title("Health Report Generator")
-    win.geometry("500x400")
+    screen_width = win.winfo_screenwidth()
+    screen_height = win.winfo_screenheight()
+    win.geometry(f"{screen_width}x{screen_height}")
+
     
     ctk.CTkLabel(
         win,
@@ -498,7 +502,7 @@ def report_generation_gui(user_id, user_name):
     
     ctk.CTkButton(
         button_frame,
-        text="📅 Weekly Report\n(Last 7 Days)",
+        text=" Weekly Report\n(Last 7 Days)",
         command=lambda: generate_report("weekly"),
         width=200,
         height=80,
@@ -509,7 +513,7 @@ def report_generation_gui(user_id, user_name):
     
     ctk.CTkButton(
         button_frame,
-        text="📆 Monthly Report\n(Last 30 Days)",
+        text=" Monthly Report\n(Last 30 Days)",
         command=lambda: generate_report("monthly"),
         width=200,
         height=80,
