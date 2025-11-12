@@ -18,7 +18,9 @@ def connect():
 def vitals_gui(user_id, user_name):
     window = ctk.CTkToplevel()
     window.title("Daily Vitals Tracker")
-    window.geometry("420x600")
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+    window.geometry(f"{screen_width}x{screen_height}")
 
     ctk.CTkLabel(window, text=f"Hello {user_name} ", font=("Arial", 18, "bold")).pack(pady=10)
     ctk.CTkLabel(window, text="Enter your vitals below:", font=("Arial", 14)).pack(pady=5)
@@ -118,7 +120,7 @@ def vitals_gui(user_id, user_name):
 def sleep_gui(user_id, user_name):
     sleep_win = ctk.CTkToplevel()
     sleep_win.title("Sleep Tracker")
-    sleep_win.geometry("300x200")
+    sleep_win.geometry("300x300")
 
     ctk.CTkLabel(sleep_win, text=f"Sleep Tracker for {user_name}", font=("Arial", 16, "bold")).pack(pady=10)
     ctk.CTkLabel(sleep_win, text="Enter sleep hours (e.g., 7.5):").pack(pady=5)
