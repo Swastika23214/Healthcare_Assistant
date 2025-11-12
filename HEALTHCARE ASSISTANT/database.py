@@ -1,12 +1,12 @@
 import sqlite3
+from datetime import datetime
 
 def connect():
+    """Create database connection and initialize all tables"""
     conn = sqlite3.connect("health_tracker.db")
     cur = conn.cursor()
 
-    
     # Users table
-    
     cur.execute("""
         CREATE TABLE IF NOT EXISTS users(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,9 +18,7 @@ def connect():
         )
     """)
 
-    
     # Daily vitals table
-    
     cur.execute("""
         CREATE TABLE IF NOT EXISTS vitals(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,21 +34,23 @@ def connect():
         )
     """)
 
-   
-# Medicine table with notes
+    # Medicine table
     cur.execute("""
         CREATE TABLE IF NOT EXISTS medicine(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             name TEXT,
+            type TEXT,
+            dosage TEXT,
+            schedule_type TEXT,
             days TEXT,
             time TEXT,
-            notes TEXT,
+            paused INTEGER DEFAULT 0,
             FOREIGN KEY(user_id) REFERENCES users(id)
         )
     """)
     
-    # Symptom table
+   # Symptom table
     
     cur.execute("""
         CREATE TABLE IF NOT EXISTS symptom_checks(
@@ -108,3 +108,6 @@ def get_symptom_history(user_id, limit=20):
     except Exception as e:
         print(f"Error fetching symptom history: {e}")
         return []
+    
+
+
