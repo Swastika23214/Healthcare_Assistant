@@ -32,17 +32,17 @@ def clean_numeric_value(value):
 
 # Column name normalization map - expanded to handle more variations
 possible_columns = {
-    "food": ["food", "food_item", "item", "name", "foodname", "product_name", "description"],
-    "calories": ["calories", "calories_(kcal)", "energy", "energy_kcal", "kcal"],
-    "protein": ["protein", "protein_(g)", "proteins"],
-    "carbohydrates": ["carbohydrates", "carbs", "carbohydrates_(g)", "carbohydrate"],
-    "fat": ["fat", "fat_(g)", "total_fat", "lipids"],
-    "fiber": ["fiber", "fiber_(g)", "dietary_fiber"],
-    "vitamins": ["vitamins", "vitamin", "vitamins_(g)", "vitamins_(mg)", "vitamin_c", "vitamin_a"],
-    "sugar": ["sugar", "sugars", "total_sugar"],
-    "sodium": ["sodium", "na", "salt"],
-    "cholesterol": ["cholesterol", "cholestrol"]
+    "food": ["food", "food_name", "Food", "Dish_Name", "Item"],
+    "calories": ["calories", "Calories", "Calories (kcal)", "energy_kcal"],
+    "protein": ["protein", "Protein", "Protein (g)", "protein_g"],
+    "carbohydrates": ["carbohydrates", "Carbohydrates", "Carbohydrates (g)", "carb_g"],
+    "fat": ["fat", "Fat", "Fats (g)", "fat_g"],
+    "fiber": ["fiber", "Fibre", "Fibre (g)", "fibre_g"],
+    "sugar": ["sugar", "Free_Sugar (g)", "freesugar_g"],
+    "sodium": ["sodium", "Sodium (mg)", "sodium_mg"],
+     "folate": ["Folate (ug)", "Folate (µg)"],
 }
+
 
 def match_column(headers, possible_names):
     """Match column names in CSV to our standard names"""
@@ -470,3 +470,4 @@ def nutrition_gui(user_id):
     ctk.CTkButton(buttons_frame, text="Clear All", command=clear_all, width=100, height=40).pack(side="left", padx=10)
     
    
+
