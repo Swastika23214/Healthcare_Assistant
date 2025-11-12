@@ -5,93 +5,89 @@ from tkinter import messagebox
 from database import save_symptom_check, get_symptom_history
 import sqlite3
 from datetime import datetime
+import pandas as pd
+import numpy as np
+import re
 
-
-# Load symptom-disease dataset
-
+# Global variables to store cleaned data
 symptom_disease_data = {}
 disease_descriptions = {}
 disease_precautions = {}
 
 def normalize_symptom(symptom):
     """Normalize symptom names for matching"""
+    if not symptom or pd.isna(symptom):
+        return ""
     return symptom.strip().lower().replace(" ", "_").replace("-", "_")
 
-def load_symptom_dataset():
-    """
-    Load symptom checker datasets from CSV files
-    Expected CSV format for symptoms:
-    - disease, symptom_1, symptom_2, ..., symptom_17
+def normalize_disease_name(disease):
+    """Normalize disease names for consistency"""
+    if not disease or pd.isna(disease):
+        return ""
+    return disease.strip().title()
+
+def clean_and_load_data():
+    """Clean and load the dataset in memory"""
+    global symptom_disease_data, disease_descriptions, disease_precautions
     
-    Expected CSV for descriptions:
-    - Disease, Description
-    
-    Expected CSV for precautions:
-    - Disease, Precaution_1, Precaution_2, Precaution_3, Precaution_4
-    """
-    
-    # Load main symptom-disease mapping
+    # Load main symptom-disease dataset
     symptom_file = "symptom_data/dataset.csv"
-    if os.path.exists(symptom_file):
-        try:
-            with open(symptom_file, "r", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    disease = row.get("Disease", "").strip()
-                    if not disease:
-                        continue
-                    
-                    symptoms = []
-                    for i in range(1, 18):  # symptom_1 to symptom_17
-                        symptom_col = f"Symptom_{i}"
-                        symptom = row.get(symptom_col, "").strip()
-                        if symptom:
-                            symptoms.append(normalize_symptom(symptom))
-                    
-                    if symptoms:
-                        symptom_disease_data[disease] = symptoms
-        except Exception as e:
-            print(f"Error loading symptom dataset: {e}")
+    if not os.path.exists(symptom_file):
+        print(f"Error: Dataset file not found at {symptom_file}")
+        return
     
-    # Load disease descriptions
-    desc_file = "symptom_data/symptom_Description.csv"
-    if os.path.exists(desc_file):
-        try:
-            with open(desc_file, "r", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    disease = row.get("Disease", "").strip()
-                    description = row.get("Description", "").strip()
-                    if disease and description:
-                        disease_descriptions[disease] = description
-        except Exception as e:
-            print(f"Error loading descriptions: {e}")
-    
-    # Load disease precautions
-    precaution_file = "symptom_data/symptom_precaution.csv"
-    if os.path.exists(precaution_file):
-        try:
-            with open(precaution_file, "r", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    disease = row.get("Disease", "").strip()
-                    if not disease:
-                        continue
-                    
-                    precautions = []
-                    for i in range(1, 5):  # Precaution_1 to Precaution_4
-                        precaution = row.get(f"Precaution_{i}", "").strip()
-                        if precaution:
-                            precautions.append(precaution)
-                    
-                    if precautions:
-                        disease_precautions[disease] = precautions
-        except Exception as e:
-            print(f"Error loading precautions: {e}")
-
-# Load datasets on module import
-load_symptom_dataset()
-
+    try:
+        # Read the dataset using pandas for easier cleaning
+        df = pd.read_csv(symptom_file)
+        
+        # Remove rows with missing disease names
+        df = df.dropna(subset=['Disease'])
+        
+        # Normalize disease names
+        df['Disease'] = df['Disease'].apply(normalize_disease_name)
+        
+        # Process symptom columns
+        for i in range(1, 18):  # symptom_1 to symptom_17
+            symptom_col = f"Symptom_{i}"
+            if symptom_col in df.columns:
+                # Normalize symptom names
+                df[symptom_col] = df[symptom_col].apply(normalize_symptom)
+        
+        # Create symptom-disease mapping
+        for _, row in df.iterrows():
+            disease = row['Disease']
+            symptoms = []
+            
+            for i in range(1, 18):
+                symptom_col = f"Symptom_{i}"
+                symptom = row[symptom_col]
+                if symptom and not pd.isna(symptom):
+                    symptoms.append(symptom)
+            
+            if symptoms:
+                symptom_disease_data[disease] = symptoms
+        
+        # Add basic descriptions for diseases that don't have them
+        for disease in symptom_disease_data.keys():
+            if disease not in disease_descriptions:
+                disease_descriptions[disease] = f"A medical condition characterized by symptoms such as {', '.join(symptom_disease_data[disease][:3])}."
+        
+        # Add basic precautions for diseases that don't have them
+        for disease in symptom_disease_data.keys():
+            if disease not in disease_precautions:
+                disease_precautions[disease] = [
+                    "Consult a healthcare professional for proper diagnosis",
+                    "Follow prescribed treatment plan",
+                    "Get adequate rest",
+                    "Maintain a healthy lifestyle"
+                ]
+        
+        print(f"Successfully loaded {len(symptom_disease_data)} diseases with symptoms")
+        print(f"Added descriptions for {len(disease_descriptions)} diseases")
+        print(f"Added precautions for {len(disease_precautions)} diseases")
+        
+    except Exception as e:
+        print(f"Error loading and cleaning dataset: {e}")
 
 def match_symptoms_to_diseases(user_symptoms):
     """
@@ -110,7 +106,6 @@ def match_symptoms_to_diseases(user_symptoms):
     # Sort by match percentage (descending) and number of matched symptoms
     matches.sort(key=lambda x: (x[1], x[2]), reverse=True)
     return matches
-
 
 def symptom_checker_gui(user_id):
     """Main GUI for symptom checker"""
@@ -145,7 +140,9 @@ def symptom_checker_gui(user_id):
     def show_results(symptoms, matches):
         result_win = ctk.CTkToplevel()
         result_win.title("Symptom Check Results")
-        result_win.geometry("600x700")
+        screen_width =  result_win .winfo_screenwidth()
+        screen_height =  result_win .winfo_screenheight()
+        result_win.geometry(f"{screen_width}x{screen_height}")
         
         # Header
         ctk.CTkLabel(
@@ -240,7 +237,10 @@ def symptom_checker_gui(user_id):
     # Main window
     win = ctk.CTkToplevel()
     win.title("Symptom Checker")
-    win.geometry("550x450")
+    screen_width = win.winfo_screenwidth()
+    screen_height = win.winfo_screenheight()
+    win.geometry(f"{screen_width}x{screen_height}")
+
     
     ctk.CTkLabel(
         win, 
@@ -294,12 +294,11 @@ def symptom_checker_gui(user_id):
         text_color="gray"
     ).pack(pady=5)
 
-
 def view_history(user_id):
     """View symptom check history"""
     history_win = ctk.CTkToplevel()
     history_win.title("Symptom Check History")
-    history_win.geometry("600x500")
+    history_win.geometry("600x600")
     
     ctk.CTkLabel(
         history_win, 
@@ -351,3 +350,11 @@ def view_history(user_id):
         text="Close", 
         command=history_win.destroy
     ).pack(pady=10)
+
+# Initialize the application by cleaning and loading data
+# Create symptom_data directory if it doesn't exist
+if not os.path.exists("symptom_data"):
+    os.makedirs("symptom_data")
+
+# Clean and load the data when module is imported
+clean_and_load_data()
