@@ -31,6 +31,8 @@ def clean_numeric_value(value):
         return 0
 
 # Column name normalization map - expanded to handle more variations
+#Dish Name,Calories (kcal),Carbohydrates (g),Protein (g),Fats (g),Free Sugar (g),Fibre (g),Sodium (mg),Calcium (mg),Iron (mg),Vitamin C (mg),Folate (µg)
+
 possible_columns = {
     "food": ["food", "food_name", "Food", "Dish_Name", "Item"],
     "calories": ["calories", "Calories", "Calories (kcal)", "energy_kcal"],
@@ -42,6 +44,7 @@ possible_columns = {
     "sodium": ["sodium", "Sodium (mg)", "sodium_mg"],
      "folate": ["Folate (ug)", "Folate (µg)"],
 }
+
 
 
 def match_column(headers, possible_names):
@@ -469,8 +472,4 @@ def nutrition_gui(user_id):
     
     ctk.CTkButton(buttons_frame, text="Clear All", command=clear_all, width=100, height=40).pack(side="left", padx=10)
     
-    print(f"✅ Successfully loaded total {len(nutrition_data)} unique foods from all datasets.")
-
-
-
-
+print(f"✅ Successfully loaded total {len(nutrition_data)} unique foods from all datasets.")
