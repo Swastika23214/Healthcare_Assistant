@@ -110,4 +110,3 @@ def get_symptom_history(user_id, limit=20):
         return []
     
 
-
