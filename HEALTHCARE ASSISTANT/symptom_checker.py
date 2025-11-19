@@ -351,10 +351,7 @@ def view_history(user_id):
         command=history_win.destroy
     ).pack(pady=10)
 
-# Initialize the application by cleaning and loading data
-# Create symptom_data directory if it doesn't exist
 if not os.path.exists("symptom_data"):
     os.makedirs("symptom_data")
 
-# Clean and load the data when module is imported
 clean_and_load_data()
