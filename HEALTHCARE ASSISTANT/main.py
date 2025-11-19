@@ -10,15 +10,13 @@ from tkinter import messagebox
 import threading
 import time
 import sqlite3
-from plyer import notification
+import plyer
 from datetime import datetime
 
 
 user_id = None
 user_name = ""
 
-
-# Background Reminder Thread
 
 def reminder_loop():
     """Checks every 60s for medicines to remind."""
@@ -27,12 +25,13 @@ def reminder_loop():
             conn = sqlite3.connect("health_tracker.db")
             cur = conn.cursor()
             now = datetime.now().strftime("%H:%M")
+            # Get medicines for all users (or filter by logged-in user if you want)
             cur.execute("SELECT name FROM medicine WHERE time=? AND paused=0", (now,))
             meds = cur.fetchall()
             conn.close()
 
             for med in meds:
-                notification.notify(
+                plyer.notification.notify(
                     title="Medicine Reminder",
                     message=f"Time to take {med[0]}",
                     timeout=10
@@ -92,25 +91,25 @@ def show_dashboard():
     
     ctk.CTkButton(
         button_frame, 
-        text="😴 Enter Sleep Hours", 
+        text=" Enter Sleep Hours", 
         command=lambda: sleep_gui(user_id, user_name),
         **button_config
     ).pack(pady=8)
     
     ctk.CTkButton(
         button_frame, 
-        text="🍎 Track Nutrition", 
+        text=" Track Nutrition", 
         command=lambda: nutrition_gui(user_id),
         **button_config
     ).pack(pady=8)
     
     ctk.CTkButton(
-        button_frame, 
-        text="💊 Medicine Scheduler", 
-        command=lambda: medicine_gui(),
-        **button_config
+    button_frame, 
+    text=" Medicine Scheduler", 
+    command=lambda: medicine_gui(user_id),  # Pass user_id here
+    **button_config
     ).pack(pady=8)
-    
+
     # Symptom Checker Button
     ctk.CTkButton(
         button_frame, 
@@ -122,7 +121,7 @@ def show_dashboard():
     # NEW REPORT GENERATION BUTTON
     ctk.CTkButton(
         button_frame, 
-        text="📊 Generate Health Report", 
+        text=" Generate Health Report", 
         command=lambda: report_generation_gui(user_id, user_name),
         **button_config
     ).pack(pady=8)
@@ -138,7 +137,7 @@ def show_dashboard():
 
     ctk.CTkButton(
         button_frame, 
-        text="🚪 Logout", 
+        text=" Logout", 
         fg_color="#E74C3C",
         hover_color="#C0392B",
         command=logout,
