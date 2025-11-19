@@ -11,11 +11,10 @@ import os
 
 
 STANDARD_VITALS = {
-    "bp_systolic": {"min": 90, "max": 120, "unit": "mmHg", "name": "Blood Pressure (Systolic)"},
-    "bp_diastolic": {"min": 60, "max": 80, "unit": "mmHg", "name": "Blood Pressure (Diastolic)"},
-    "sugar": {"min": 70, "max": 140, "unit": "mg/dL", "name": "Blood Sugar"},
-    "pulse": {"min": 60, "max": 100, "unit": "bpm", "name": "Pulse Rate"},
-    "sleep_hours": {"min": 7, "max": 9, "unit": "hours", "name": "Sleep Hours"}
+    "bp_systolic": {"min": 90, "max": 120, "unit": "mmHg", "name": "Blood Pressure (Systolic)", "color": "#E74C3C"},
+    "bp_diastolic": {"min": 60, "max": 80, "unit": "mmHg", "name": "Blood Pressure (Diastolic)", "color": "#9B59B6"},
+    "sugar": {"min": 70, "max": 140, "unit": "mg/dL", "name": "Blood Sugar", "color": "#3498DB"},
+    "pulse": {"min": 60, "max": 100, "unit": "bpm", "name": "Pulse Rate", "color": "#E67E22"}
 }
 
 
@@ -177,59 +176,124 @@ def generate_report_pdf(user_id, user_name, period, analysis, save_path):
 
 def create_vitals_graphs(analysis, period):
     """
-    Create matplotlib graphs for vitals comparison
-    Returns figure object
+    Create clear matplotlib line graphs for vitals comparison
+    Returns figure object with improved visualization
     """
-    fig = Figure(figsize=(12, 8), facecolor='white')
-    
+    # Only include vitals we want to plot (exclude sleep_hours and weight)
     vitals_to_plot = []
     for vital_name, vital_data in analysis["vitals"].items():
-        if vital_name in STANDARD_VITALS and vital_name != "weight":
+        if vital_name in STANDARD_VITALS:  # Only plot standard vitals
             vitals_to_plot.append((vital_name, vital_data))
     
+    if not vitals_to_plot:
+        return None
+    
+    # Create figure with subplots
     num_plots = len(vitals_to_plot)
-    rows = (num_plots + 1) // 2
+    fig = Figure(figsize=(14, 10), facecolor='white')
+    
+    # Create 2x2 grid for 4 vitals
+    rows = 2
+    cols = 2
     
     for idx, (vital_name, vital_data) in enumerate(vitals_to_plot, 1):
-        ax = fig.add_subplot(rows, 2, idx)
+        ax = fig.add_subplot(rows, cols, idx)
         std = STANDARD_VITALS[vital_name]
         
-        # Plot user data
+        # Get data
         dates = vital_data["dates"]
         values = vital_data["values"]
         
+        if not dates or not values:
+            continue
+        
         # Convert dates to readable format
-        x_labels = [d.split("-")[1] + "/" + d.split("-")[2] if "-" in d else d for d in dates]
+        date_labels = []
+        for d in dates:
+            if "-" in d:
+                parts = d.split("-")
+                if len(parts) == 3:
+                    date_labels.append(f"{parts[1]}/{parts[2]}")
+                else:
+                    date_labels.append(d)
+            else:
+                date_labels.append(d)
         
-        ax.plot(range(len(values)), values, marker='o', linewidth=2, 
-                markersize=6, color='#2196F3', label='Your Values')
+        x_positions = range(len(values))
         
-        # Plot standard range
-        ax.axhline(y=std["min"], color='green', linestyle='--', 
-                   linewidth=1.5, alpha=0.7, label=f'Min Standard ({std["min"]})')
-        ax.axhline(y=std["max"], color='green', linestyle='--', 
-                   linewidth=1.5, alpha=0.7, label=f'Max Standard ({std["max"]})')
+        # Plot standard range as shaded area (GREEN ZONE)
+        ax.axhspan(std["min"], std["max"], alpha=0.2, color='green', label='Normal Range', zorder=1)
         
-        # Fill standard range
-        ax.fill_between(range(len(values)), std["min"], std["max"], 
-                        alpha=0.2, color='green')
+        # Plot user's actual values with line and markers
+        ax.plot(x_positions, values, 
+                marker='o', 
+                linewidth=3, 
+                markersize=8, 
+                color=std["color"], 
+                label='Your Values',
+                zorder=3)
         
-        # Average line
-        ax.axhline(y=vital_data["average"], color='orange', linestyle='-', 
-                   linewidth=2, alpha=0.8, label=f'Your Avg ({vital_data["average"]:.1f})')
+        # Plot average line
+        ax.axhline(y=vital_data["average"], 
+                   color='orange', 
+                   linestyle='--', 
+                   linewidth=2, 
+                   alpha=0.8, 
+                   label=f'Your Average: {vital_data["average"]:.1f}',
+                   zorder=2)
         
-        ax.set_title(std["name"], fontsize=12, fontweight='bold', pad=10)
-        ax.set_xlabel('Date', fontsize=10)
-        ax.set_ylabel(f'Value ({std["unit"]})', fontsize=10)
-        ax.set_xticks(range(len(x_labels)))
-        ax.set_xticklabels(x_labels, rotation=45, ha='right', fontsize=8)
-        ax.legend(fontsize=8, loc='best')
-        ax.grid(True, alpha=0.3, linestyle=':', linewidth=0.5)
+        # Plot min and max standard lines
+        ax.axhline(y=std["min"], color='green', linestyle=':', linewidth=1.5, alpha=0.6, zorder=2)
+        ax.axhline(y=std["max"], color='green', linestyle=':', linewidth=1.5, alpha=0.6, zorder=2)
+        
+        # Add min/max text annotations
+        ax.text(len(values)-0.5, std["min"], f'Min: {std["min"]}', 
+                verticalalignment='bottom', horizontalalignment='right', 
+                fontsize=9, color='green', weight='bold')
+        ax.text(len(values)-0.5, std["max"], f'Max: {std["max"]}', 
+                verticalalignment='top', horizontalalignment='right', 
+                fontsize=9, color='green', weight='bold')
+        
+        # Styling
+        ax.set_title(std["name"], fontsize=14, fontweight='bold', pad=15)
+        ax.set_xlabel('Date', fontsize=11, fontweight='bold')
+        ax.set_ylabel(f'{std["unit"]}', fontsize=11, fontweight='bold')
+        
+        # Set x-axis
+        ax.set_xticks(x_positions)
+        ax.set_xticklabels(date_labels, rotation=45, ha='right', fontsize=9)
+        
+        # Grid
+        ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+        ax.set_axisbelow(True)
+        
+        # Legend
+        ax.legend(fontsize=9, loc='upper left', framealpha=0.9)
+        
+        # Add status indicator
+        status = vital_data["status"]
+        status_color = {'Normal': 'green', 'High': 'red', 'Low': 'orange'}
+        ax.text(0.98, 0.98, f'Status: {status}', 
+                transform=ax.transAxes,
+                fontsize=11, fontweight='bold',
+                verticalalignment='top', horizontalalignment='right',
+                bbox=dict(boxstyle='round', facecolor=status_color.get(status, 'gray'), alpha=0.3))
+        
+        # Set y-axis limits with padding
+        y_min = min(min(values), std["min"]) * 0.9
+        y_max = max(max(values), std["max"]) * 1.1
+        ax.set_ylim(y_min, y_max)
     
-    fig.suptitle(f'{period.capitalize()} Vitals Report - Comparison with Standards', 
-                 fontsize=16, fontweight='bold', y=0.98)
+    # Overall title
+    fig.suptitle(f'{period.capitalize()} Health Vitals Report - Comparison with Standards', 
+                 fontsize=18, fontweight='bold', y=0.98)
     
-    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    # Add description
+    fig.text(0.5, 0.02, 
+             '📊 Green shaded area = Normal/Healthy range | 🔴 Your line = Actual readings | 🟠 Dashed line = Your average',
+             ha='center', fontsize=10, style='italic', color='gray')
+    
+    fig.tight_layout(rect=[0, 0.03, 1, 0.96])
     
     return fig
 
@@ -263,19 +327,18 @@ def report_generation_gui(user_id, user_name):
         screen_height = report_win.winfo_screenheight()
         report_win.geometry(f"{screen_width}x{screen_height}")
 
-        
         # Create notebook/tabs
         tab_view = ctk.CTkTabview(report_win, width=1150, height=720)
         tab_view.pack(pady=10, padx=10, fill="both", expand=True)
         
         # Tab 1: Summary
-        tab_view.add("📊 Summary")
-        summary_frame = tab_view.tab("📊 Summary")
+        tab_view.add(" Summary")
+        summary_frame = tab_view.tab(" Summary")
         create_summary_tab(summary_frame, period, analysis)
         
         # Tab 2: Graphs
-        tab_view.add("📈 Graphs")
-        graph_frame = tab_view.tab("📈 Graphs")
+        tab_view.add(" Visual Analysis")
+        graph_frame = tab_view.tab(" Visual Analysis")
         create_graph_tab(graph_frame, analysis, period)
         
         # Download button
@@ -298,7 +361,7 @@ def report_generation_gui(user_id, user_name):
         
         ctk.CTkButton(
             button_frame,
-            text="📥 Download Report (PDF)",
+            text=" Download Report (PDF)",
             command=download_report,
             width=200,
             height=40,
@@ -332,9 +395,9 @@ def report_generation_gui(user_id, user_name):
             font=("Arial", 14)
         ).pack(pady=5)
         
-        # Vitals Cards
+        # Vitals Cards (excluding sleep_hours)
         for vital_name, vital_data in analysis["vitals"].items():
-            if vital_name in STANDARD_VITALS:
+            if vital_name in STANDARD_VITALS:  # Only show standard vitals
                 create_vital_card(scroll_frame, vital_name, vital_data)
     
     def create_vital_card(parent, vital_name, vital_data):
@@ -458,23 +521,43 @@ def report_generation_gui(user_id, user_name):
             "pulse": {
                 "High": "Your pulse rate is elevated. Rest adequately, manage stress, and avoid excessive caffeine. Consult a doctor if it continues.",
                 "Low": "Your pulse rate is low. If you're not an athlete and feel dizzy or weak, consult a healthcare provider."
-            },
-            "sleep_hours": {
-                "High": "You may be oversleeping. Try to maintain 7-9 hours. Excessive sleep can indicate underlying issues - consult a doctor if concerned.",
-                "Low": "You're not getting enough sleep. Aim for 7-9 hours. Establish a bedtime routine and limit screen time before bed."
             }
         }
         
         return recommendations.get(vital_name, {}).get(status, "Maintain healthy lifestyle habits and regular check-ups.")
     
     def create_graph_tab(parent, analysis, period):
+        # Info label at top
+        info_frame = ctk.CTkFrame(parent, fg_color="#E8F5E9", corner_radius=10)
+        info_frame.pack(pady=10, padx=20, fill="x")
+        
+        ctk.CTkLabel(
+            info_frame,
+            text=" How to read the graphs:",
+            font=("Arial", 13, "bold")
+        ).pack(anchor="w", padx=15, pady=5)
+        
+        ctk.CTkLabel(
+            info_frame,
+            text="• Green shaded area = Normal/Healthy range for that vital\n• Colored line with dots = Your actual readings over time\n• Orange dashed line = Your average value\n• Your readings should ideally stay within the green zone",
+            font=("Arial", 11),
+            justify="left"
+        ).pack(anchor="w", padx=15, pady=5)
+        
         # Create matplotlib figure
         fig = create_vitals_graphs(analysis, period)
         
-        # Embed in tkinter
-        canvas = FigureCanvasTkAgg(fig, parent)
-        canvas.draw()
-        canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
+        if fig:
+            # Embed in tkinter
+            canvas = FigureCanvasTkAgg(fig, parent)
+            canvas.draw()
+            canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
+        else:
+            ctk.CTkLabel(
+                parent,
+                text="No graph data available",
+                font=("Arial", 14)
+            ).pack(pady=50)
     
     # Main window
     win = ctk.CTkToplevel()
@@ -483,10 +566,9 @@ def report_generation_gui(user_id, user_name):
     screen_height = win.winfo_screenheight()
     win.geometry(f"{screen_width}x{screen_height}")
 
-    
     ctk.CTkLabel(
         win,
-        text="📊 Generate Health Report",
+        text=" Generate Health Report",
         font=("Arial", 22, "bold")
     ).pack(pady=20)
     
@@ -524,7 +606,7 @@ def report_generation_gui(user_id, user_name):
     
     ctk.CTkLabel(
         win,
-        text="💡 Make sure you have entered vitals data first",
+        text=" Make sure you have entered vitals data first",
         font=("Arial", 11),
         text_color="gray"
     ).pack(pady=10)
